@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LocalDebuggerCommandArguments>-inFile ../../images/CircularPatterns_63_256x256.ppm -bitstream bits.bits -recFile rec.dpx -bpp 8.0625 -configFile configFiles_v1.2/config_444_8bpc_8bpp.cfg -calcPsnr -dumpModes -dumpPpsFields -sliceHeight 256 -slicesPerLine 1 -ssmMaxSeSize 128 -minilog</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>../</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LocalDebuggerCommandArguments>-inFile ../../images/RandomWidthTestSet_12bpc_420\fr_0009.dpx -bitstream bits.bits -recFile rec.dpx -bpp 15.0625 -configFile configFiles_v1.2/config_420_12bpc_15bpp.cfg -calcPsnr -dumpModes -dumpPpsFields -sliceHeight 512 -slicesPerLine 1 -ssmMaxSeSize 128 -minilog -debugTracer</LocalDebuggerCommandArguments>
+    <LocalDebuggerWorkingDirectory>../</LocalDebuggerWorkingDirectory>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+  </PropertyGroup>
+</Project>

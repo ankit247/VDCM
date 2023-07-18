@@ -1,0 +1,113 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="..\src\DecodingParams.cpp" />
+    <ClCompile Include="..\src\DecTop.cpp" />
+    <ClCompile Include="..\src\RateControl.cpp" />
+    <ClCompile Include="..\src\EntropyCoder.cpp" />
+    <ClCompile Include="..\src\MppMode.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\MppfMode.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Mode.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\TransMode.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\BpMode.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SyntaxElement.cpp">
+      <Filter>SSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Ssm.cpp">
+      <Filter>SSM</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Pps.cpp" />
+    <ClCompile Include="..\src\VdcmDecoder.cpp" />
+    <ClCompile Include="..\src\BitFifo.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Bitstream.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\ImageFileIo.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\Misc.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\VideoFrame.cpp">
+      <Filter>Support</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\BpSearchRange.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\IntraPrediction.cpp">
+      <Filter>Modes</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\DecodingParams.h" />
+    <ClInclude Include="..\src\DecTop.h" />
+    <ClInclude Include="..\src\RateControl.h" />
+    <ClInclude Include="..\src\EntropyCoder.h" />
+    <ClInclude Include="..\src\MppMode.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\MppfMode.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Mode.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\TransMode.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BpMode.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SyntaxElement.h">
+      <Filter>SSM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Ssm.h">
+      <Filter>SSM</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Pps.h" />
+    <ClInclude Include="..\src\BitFifo.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Bitstream.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\ImageFileIo.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\Misc.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\VideoFrame.h">
+      <Filter>Support</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\BpSearchRange.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\IntraPrediction.h">
+      <Filter>Modes</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="Modes">
+      <UniqueIdentifier>{51bb904e-cf89-46d1-9298-cd71acbbc1f5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="SSM">
+      <UniqueIdentifier>{fbcfd81c-73b6-4739-b815-b368a159c6b2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Support">
+      <UniqueIdentifier>{7f6dceaa-3875-4c95-85e7-47c96aab5cd3}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+</Project>
