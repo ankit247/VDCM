@@ -1,0 +1,502 @@
+# -------------------------------------------------------------------------------------------------
+# VDC-M ChangeLog
+# -------------------------------------------------------------------------------------------------
+
+v1.2.5 - November 15, 2022
+* Removed macro TESTING_CSC_BYPASS
+
+v1.2.4 - October 18, 2022
+* Updated the constraint in EncTop::CalculateSlicePadding() related to 4:2:2 and 4:2:0 data with
+  odd width. There is no need to restrict this check to the case where m_slicesPerLine > 1. The
+  constraint has been updated to reflect this for readability purposes, so as not to confuse the
+  implementer.
+
+v1.2.3 - September 27, 2022
+* Added warning for PPS parameter ssm_max_se_size less than 128 bits
+
+v1.2.2 - February 25, 2019
+* clear macros and remove RC designation
+
+v1.2.2 RC1 - January 23, 2019
+* Added capability to encode either 1.1 or 1.2 bitstream from 1.2 test model.  Config files are now
+  provided for both versions of the codec and include fields for versionMajor and versionMinor.
+* CHUNK_ADJ_BITS_FIX - fixed handling of chunk byte-alignment bits 
+* RELAX_CONDITION_C - updated rate control condition C  
+
+v1.2.1 RC1 - December 10, 2018
+* Added software fix for properly supporting very large images (up to 65535x65535). Previously, the
+  max supported image size was (2^31 - 1 pixels).
+  * macro: VERY_LARGE_IMAGE_BUG_FIX
+  * SCR: VDC-M 1.1/1.2 test model very large image software bug fix
+* Added software fix for slices which meet the minimum slice size criteria after padding, but not
+  before. For example, slice width = 57 and slice height = 128.
+  * macro: MIN_SLICE_WIDTH_BUG_FIX
+  * SCR: VDC-M 1.1/1.2 test model very small slice software bug fix
+
+v1.2 - November 13, 2018
+* clear macros and rev version number to 1.2
+
+v1.2 RC1 - October 1, 2018
+ * PPS changes
+   * Added field slices_per_line: passed to decoder to ease decoder's computation
+   * Added field slice_padding_horizontal: passed to decoder to ease decoder's computation
+   * Added field mpp_min_step_size: smallest step size possible for MPP mode (used to restrict the
+     worst-case syntax size)
+   * The following fields have been changed from uint8 to int8:
+     * flatness_qp_very_flat_fbls
+     * flatness_qp_very_flat_nfbls
+     * flatness_qp_somewhat_flat_fbls
+     * flatness_qp_somewhat_flat_nfbls
+     * flatness_qp_lut[0] ... flatness_qp_lut[7]
+ * mpp_min_step_size is programmed via config file and contained in the PPS, rather than being loaded
+   from a set of constants.  This is required to support bitrates up to a 1:1 compression ratio.
+ * 4:4:4/12bpc
+ * The decoder will load slicesPerLine and slicePaddingHorizontal from PPS rather than computing them.
+ * The MPP QP underflow prevention mechanism in MppMode::UpdateQp() will be used for 4:4:4 content for
+   BPP > 12.0.  
+ * For 4:4:4/RGB content with BPP > 12.0: If underflow prevention is enabled in MPP mode, then the rate
+   of MPP mode in each color space will be compared with avgBlockBits and the color space will be set as
+   invalid if strictly less than avgBlockBits.
+ * Added m_remainingChunkAdjBits as a member of the RateControl class. This is used to track the number
+   of chunk adjustmint bits remaining in a slice. m_remainingChunkAdjBits is added as a bound to condition
+   C of the encoder mode selection algorithm. With this fix, all fractional bitrates will be supported,
+   rather than restricting to cases where chunk_adj_bits=0.
+ 
+v1.1.1 - October 1, 2018
+* Updated recommended guidance for ssm_max_se_size to 128 bits for all v1.1 configurations.
+* Added two flags to DPX reader/writer:
+  * "-forceDpxWritePadLines" (encoder/decoder) - if this option is enabled, the DPX writer will pad
+    each line of the output image to the nearest 32-bit coundary.
+  * "-forceDpxReadPadLines": (encoder) - if this option is enabled, the DPX reader will assume that
+    each line of the input image is padded to the nearest 32-bit boundary.
+* Removed unnecessary 32-bit limit from methods BitFifo::PutBits() and BitFifo::GetBits()
+* Added method EncTop::VersionChecks() which checks the version number and applies the appropriate
+  restrictions regarding deprecated use cases in v1.1, for example:
+  * BPP > 12.0
+  * chunk_adj_bits != 0
+  * slices_per_line != (2 ^ n)
+  * ssm_max_se_size that is too small to fit the worst case MPP syntax (dependent on mpp_min_step_size)
+  * mpp_min_step_size that is too large to guarantee proper MPP mode underflow prevention
+
+v1.1.0 - April 30, 2018
+* rev version number to 1.1.0
+
+v1.0.8 - April 16, 2018
+* Fixed the config file for 4:4:4/10bpc/9bpp. The previous values for the mppfBitsPerComp fields
+  were set incorrectly.
+* Added a flag for the DPX writer (-forceDpxWriteDataOffset) to force writing the data offset value
+  to the DPX header for RGB content. The output DPX image files will render properly in Vooya with
+  this flag, however other viewers may not. Recommended to use this flag if the intended image
+  viewer is Vooya.
+
+v1.0.7 - March 20, 2018
+* BUGFIX_MPP_CUR_BIAS - add case for curBias when curStepSize=0 (bit-exact)
+* TARGET_RATE_SIMPLIFICATION - replace target rate clip function with min (bit-exact)
+* BUGFIX_MPPF_TEST_CS - fix bug with MPPF distortion calculation in YCoCg colorspace
+
+v1.0.6 - March 12, 2018
+* Fixed compile bug for Linux/GCC (no performance delta)
+
+v1.0.5 - March 5, 2018
+* REC_BUF_EXTRA_YCOCG - implemented additional buffer for reconstructed YCoCg data from the current
+  blockline. This removes the need for two instances of CSC on the critical path of a practical
+  implementation.
+* GETQP_MODS - Simplified GetCurCompQp() function and fixed the mapping from masterQp to modQp for 
+  YCoCg (10/12bpc) and YCbCr (very high QP).
+* XFORM_MODS - Re-implemented the Test() function for transform mode to better reflect the way it
+  would be done in a practical implementation. Added a symmetric shift for the transform mode
+  dequant function. Clipped reconstructed residuals prior to calculating the distortion. Added
+  modeRate as a tie-breaker for RD cost during encoder intra predictor selection.
+* MPP_MODS - Unified the ComputeMidpoint() function for MPP and MPPF modes.  Modified the error
+  diffusion mechanism to include the error term only in the residual calculation.  Clipped the
+  midpoint value to (1 << bpc) - 1.
+
+v1.0.4 - February 26, 2018
+* BP_P16 - change BP partition decision logic to parallel implementation.
+* PPS_EXTRA_PARAMS - add PPS parameters to reduce decoder complexity:
+  * chunk_adj_bits: total number of bits per blockline for chunk byte alignment.
+  * slice_num_bits: total number of bits per slice.
+  * num_extra_mux_bits: total bits needed per slice for substream multiplexing.
+* BP_REMOVE_CLIPS - remove unnecessary clips from BP mode.
+* BP_ROUNDING_MOD - replace dequant function in BP with a symmetric dequant.
+* CSC_YCOCG_CLIP - change BP reconstruction function to clip Co/Cg values to [-2^n, 2^n-1] instead
+  of [-(2^n-1), 2^n-1], to agree with all other modes.
+* VERSION_BIT_DEPTH_CHECK - remove bit depth check, instead fully deprecating v1.0.0.
+* VERSION_CHECK - fully deprecate v1.0.0.
+* CHECK_FOR_INPUT_FILE - encoder errors out if specified source file isn't found in the file system.
+
+v1.0.3 - February 13, 2018 (re-versioned from v1.1.0)
+* CHECK_FOR_CONFIG_FILE - encoder errors out if specified config file isn't found in the file system.
+
+v1.0.2 - February 5, 2018 (re-versioned from v1.1.0)
+* VERSION_BIT_DEPTH_CHECK - applied to both encoder and decoder.
+* fixed an errant paren and incorrect escape character in Pps.cpp.
+
+v1.0.1 - January 29, 2018 (re-versioned from v1.1.0)
+* BUGFIX_MINQP_12 - correctly set the minQp to -16 for 12bpc content (related to VDC-M 1.0.0 12bpc
+  min QP bug fix SCR)
+* BUGFIX_MPP_STEPSIZE - increase size of MPP YCoCg step size LUT (related to VDC-M 1.0.0 MPP YCoCg 
+  step size LUT bug fix SCR)
+* BUGFIX_422_420_SLICE_WIDTH - sanity check on slice dimensions for 4:2:0/4:2:2 content (related to 
+  VDC-M 1.0.0 4:2:2/4:2:0 slice width bug fix SCR)
+* DUMP_PPS_MPPF_BITS_PER_COMP_MOD - update the dumping of PPS fields for MPPF bits per component to
+  match the format used in the written spec.
+* MINIMUM_SLICE_PARAMS - enforce constraints on the minimum slice size.
+* VERSION_BIT_DEPTH_CHECK - check the bit depth and codec version at the top of the encoder.  Print
+  an error message and exit if the version is 1.0.0 and the bit depth is greater than 8bpc.
+
+v1.0.0 - December 12, 2017
+* rev version number to 1.0.0
+
+v0.95 - November 30, 2017
+* clean macros
+* update PPS bit fields
+
+v0.90-4 - November 15, 2017
+* bugfix for intra for 4:2:0 only
+
+v0.90-3 - November 13, 2017
+* bugfix for RC slice width for images with one slice/line, where the source width is not divisible
+by 8 with new chunk definition.
+* changed version major/minor fields to be 7 bits (0-127)
+* Added following DPX header fields.  These seem to be needed for GM to correctly read the file in 422 mode.
+  * encryption key (byte offset 660), set to 0xFFFFFFFF
+  * reference low data code value (byte offset 784)
+  * reference low quantity represented (byte offset 788)
+  * reference high data code value (byte offset 792)
+  * reference high quantity represented (byte offset 796)
+
+v0.90-2 - November 11, 2017
+* Force writing of "correct" file size to DPX header.  Will not trust the input file.
+
+v0.90-1 - November 10, 2017
+* Updated linux makefile
+* PPM I/O bugfix
+
+v0.90 - November 9, 2017
+* Updated MTK license
+* QC_INTRA_CHROMA_MODS - update filters for intra prediction for 4:2:0/4:2:2 chroma components
+* QC_MPP_MIN_STEPSIZE_MOD - reduce min step size for MPP mode from 1 to 0.  This improves
+  quality significantly for 4:2:2/4:2:0 content at high bitrate.
+* removed following project files: cmd_parse.cpp|h, Dpx.cpp|h, dsc_types.h, dsc_utils.cpp|h,
+  fifo.cpp|h, logging.cpp|h, Ppm.cpp|h, utl.cpp|h, vdo.h, VideoIO.cpp|h
+* added flags to over-ride default DPX options:
+  * forceDpxReadLE - force little endian order for DPX read (default is big endian)
+  * forceDpxReadBGR - force BGR order for DPX read (default is RGB)
+  * forceDpxWriteLE - force little endian order for DPX write (default is big endian)
+  * forceDpxWriteBGR - force BGR order for DPX write (default is RGB)
+* Updated versioning in PPS:
+  * version major (uint8), decimal value between [1, 99]
+  * version minor (uint8), decimal value between [0, 99]
+  * version release (char), ascii value which is either NULL (0x0) or alpha lower (0x61-0x7a)
+
+v0.89 - November 2, 2017
+* QC_BIT_FIFO - added new implementation of bit-accessible FIFO in class BitFifo
+* QC_IMAGE_IO - added new implementation of file IO in class ImageFileIo
+  * DPX - supporting 8bpc (packing 0), 10/12bpc (packing 1), descriptors 50/100/102/104
+    * assuming RGB data order for descriptor 50 (even though the spec specifies BGR order)
+    * assuming big-endian for data doublewords
+  * PPM - supporting 8/10/12bpc
+  * RAW - interleaved 444.  If bit depth > 8, pad each sample to 16-bit word as in PPM
+  * YUV - planar 420/422/444.  If bit depth > 8, pad each sample to 16-bit word as in PPM
+* QC_CHUNK_ONE_LINE - change definition of chunk to be for one line of data rather than one blockline.
+* QC_UNDERFLOW_PREVENTION_MOD - increase threshold for underflow prevention to account for difference
+between block-time and pixel-time.
+* changed the name of compiled binaries to VDCM_Encoder.exe, VDCM_Decoder.exe
+* rename main entry functions to VdcmEncoder.cpp, VdcmDecoder.cpp
+
+v0.88 - October 13, 2017
+* cleaned up macros for VESA GMR release.
+* fixed a memory leak which occurred only if the '-help' flag is passed.
+* changed the binary names to "AdscEncoder.exe", "AdscDecoder.exe"
+
+v0.87 - October 12, 2017
+* QC_BP_SRC_SHIFT - search range C is shifted to the left by one sample.  With this change, the first
+24 positions in search range C (0-23) have no dependency on the previous reconstructed block.  Only positions
+25..32 will have a dependency.  See figs. 5-22, 5-23 and 5-24 in the spec for more info.
+* QC_MOD_FRACTIONAL_BPP - updated byte-alignment of chunks for fractional BPP
+* QC_RC_VERY_LARGE_SLICES - updated rate controller to support very large slices.  For example, single
+slice of 7680x4320.  Tested up to 16384x16384, however this requires compiling for 64-bit due to the memory
+footprint.
+
+v0.86 - September 29, 2017
+* Updated makefile
+* QC_INTRA_FBLS - added a separate intra mode for FBLS case.  Before this was an edge case for the DC intra type.
+* QC_MPP_MODS - reorganized MPP test() function to better align with hardware design.
+* QC_SLICE_NUM_PX - added a 4-byte field to the PPS which gives the number of px per slice.
+* QC_RC_BUGFIX - fixed a rate control bug which was causing some crashes for very small slices at 4bpp.
+* QC_EC_MOD_ALL_GROUPS - thoroughly cleaned the EncodeAllGroups() and DecodeAllGroups() functions to better align
+with the written spec.  These sections have also been rewritten in the spec for better clarity.
+
+v0.85 - September 21, 2017
+* Encoder now places the PPS as the first 128 bytes of the bitstream
+* Added following flags for encoder: (-debugTracer, -dumpPpsBytes, -dumpPpsFields, -dumpModes, -minilog, -calcPsnr)
+* Added following flags for decoder: (-debugTracer, -dumpPpsBytes, -dumpPpsFields, -dumpModes)
+* Decoder inputs have been restricted to the bitstream (containing PPS) and the location to save the reconstructed image.
+* If the decoder is run without specifying -recFile, then the PPS will be dumped and the decoder will exit
+* Combined config and RC files into a single file (see configFiles/ directory)
+* Implemented slice multiplexing
+* Fixed two bugs in BP mode:
+  * removed bpQuantTableSqrt2, all block components use bpQuantTable instead
+  * remove rounding in bpvMapping function
+* Entropy coding
+  * QC_EC_ECG_REORDER - reordering of entropy coding groups for transform mode (DC coefficient is transmitted last using 2C representation)
+  * QC_EC_GROUP_SIGN_BITS - for each component (SM) all sign bits are placed in ECG#3
+  * QC_EC_RC_PADDING_MOD - change the size of the RC underflow prevention padding words (now split into 9 even parts instead of 6) 
+  * QC_VEC_PREFIX_MOD - for VEC Golomb-Rice codebook, the encoder won't signal the trailing "0" bit of the unary prefix when the prefix length is the maximum possible.  In this case, the decoder can infer the "0" bit after reaching the maximum prefix length
+  * QC_VEC_GR_CODEBOOK_MOD - all GR codebooks with bitsReq=2 will now use vecGrK=5.  This is to avoid the long prefix associated with the combination (bitsReq=2/vecGrK=4).  With this change, the maximum size of a VEC code will be 12 bits.
+  * QC_VEC_MAPPING_MOD - simplified the one-to-one function for mapping a group of samples to a vecCodeSymbol, and remapped the VEC LUT to reflect this change.
+* Rate control
+  * QC_RATE_BUFFER_GUIDANCE - change the guidance for rate buffer size
+
+v0.84 - July 28, 2017
+* Code cleanup, removal of dead macros, etc.
+* QC_REM_PADDING_FIRST_BLOCK - changed default to disabled.  This means that rate buffer padding can
+occur on the first block in slice.  This addresses some edge cases at certain compression rates (for
+example, YUV 4:2:0 at high bpp).  Set to 1 to be bit-exact with v0.832.
+* Remove unused options from config file.
+* Remove source files for unused classes: PatMode, DpcmMode, BlockPartition.
+* Update config files to include the following:
+    +-------------------+-----------------------------+
+    | Input format      | Supported BPP               |
+    +-----+-----+-------+---+---+---+---+---+----+----+
+    | CSC | BPC | CF    | 4 | 5 | 6 | 7 | 8 | 10 | 12 |
+    +-----+-----+-------+---+---+---+---+---+----+----+
+    | RGB | 8   | 4:4:4 | x | x | x | x | x | x  |    |
+    | YUV | 8   | 4:2:2 | x | x | x | x | x | x  |    |
+    | YUV | 8   | 4:2:0 | x | x | x | x | x | x  |    |
+    | RGB | 10  | 4:4:4 |   | x | x | x | x | x  | x  |
+    | YUV | 10  | 4:2:2 |   | x | x | x | x | x  | x  |
+    | YUV | 10  | 4:2:0 |   | x | x | x | x | x  | x  |
+    +-----+-----+-------+---+---+---+---+---+----+----+
+
+v0.832 - July 21, 2017
+* QC_MIN_QP_BUFFER_MOD - allow minQpOffset to be 0 if BF > 15%, but the rate buffer itself has
+fewer than (hrdInitSize>>2) bits.  This will give lower QP at end-of-slice for easy slices.
+
+v0.831 - July 12, 2017
+* QC_SSM_SE_MIN_SIZE_BUG_FIX - fixed a bug relating to min SE size for SSM.  Enable this to
+correctly replace the 1-bit component skip flag for transform/bypass-transform with a 2-bit
+flag when active.
+
+v0.83 - June 27, 2017
+* QC_MAX_QP_UPDATE - fixed a bug in the rate controller where max QP wasn't being enforced.
+After fixing this, was able to get improvements for worst-case content by replacing max QP
+logic with a LUT.  max QP LUT is included in the PPS (8 bytes).  Rate control files updated
+for v0.83 will take advantage of this feature.
+* QC_420_MPP_UNDERFLOW_MODS - MPP mode can operate below the average block rate for 4:2:0
+and 4:2:2 use cases.  This flag enables encoder-side decision to drop QP for MPP mode when
+rate buffer underflow prevention is enabled.  No change required at decoder side since the
+MPP step size is signaled.
+
+v0.82 - June 3, 2017
+* QC_UPDATED_DCT - update the implementation for 4-point and 8-point DCT, along with the
+quantizer implementation for transform mode.  This new implementation slightly reduces the
+hardware cost while offering better performance at low QP.
+* QC_SSM_UPDATE_MIN_SE - increase minSeSize from 1 bit to 2 bits with two minor syntax
+changes to transform and BP modes as below.  With this change, SSM padding is effectively 
+disabled, and the balance FIFO size is increased to compensate.
+** transform mode: change component skip flag for chroma components (ssm2/ssm3) such that 
+an inactive component skip is signaled as "0" while active component skip is signaled as "11".
+** BP mode: distribute BPVs such that the 1 or 2 BPV for each 2x2 sub-block are located in 
+ssm0-ssm3.  The BPV table is fully contained in ssm0.
+* QC_MPPF_FIX - fixed encoder-side bug in CSC for MPPF mode.
+* QC_BP_422_FIX - bug in BP search range mapping between BPV index and position for search
+range C for 4:2:0/4:2:2 content.
+* QC_REM_PADDING_FIRST_BLOCK - rate buffer padding was being applied to the first block in
+each slice unnecessarily, since transmission has not yet begun.  This padding has been removed.
+* QC_MIN_BLOCK_BITS_MOD - increase minBlockBits by 1 bit to account for the MPPF type flag.
+* QC_BP_PARTITION_SAD_MOD - unify the SAD calculation for BP partition decision to agree
+with the spec.
+* QC_MINILOG - allows for additional logging information from encoder-side, but ligter
+weight than ENC_TRACE and DEC_TRACE.  For example, minilog can be used to debug SSM
+information on a per-block basis.  
+* QC_SIMPLIFY_BP_QUANT - change the BP quant dead zone precision to unify the quant
+procedure between BP and the quant in the updated DCT implementation.
+* updated config and RC files to v0.82 (increase maxSeSize to equal muxWordSize)
+* updated readme.
+
+v0.81 - June 2, 2017
+* SAM_TD_ENABLE - enable ADSC with temporal differencing (TD).  If disabled, will match
+with v0.80
+
+v0.80 - April 30, 2017
+* QC_MPP_DIFFUSION - add error diffusion to MPP/MPPF at encoder side.  This is used for any
+component using less than or equal to QC_MPP_DIFFUSION_BITS_THRESHOLD bits per sample.  An
+alternative, lighter-weight version can be used by setting QC_MPP_DIFFUSION_LIGHT.  This will
+help with the reproduction of random noise.
+* QC_RC_BUFFER_SLOPE_FIX - fixed a bug with the rate control algorithm where the buffer offset
+slope was not being considered in RateControl::ModeBufferCheck() when checking for the rate buffer
+overflow condition during encoder mode selection
+* QC_PRECISION_REDUCE_BITRATE_LAMBDA - modification to encoder lambda calculation for bitrate lambda.
+This will result in less storage of lambda LUT in PPS.  Interpolation is used.
+* QC_PRECISION_REDUCE_BF_LAMBDA - modification to encoder lambda calculation for buffer fullness
+lambda.  This will result in less storage of lambda LUT in PPS.  Interpolation is used.
+* MPP bug fix at encoder side
+* Added rate control files to ADSC.  The RC file is provided via the config file
+* Added config file including RC tuning for following bitrates/chroma formats:
+    +-------------------+-----------------------------+
+    | Input format      | Supported BPP               |
+    +-----+-----+-------+----+----+----+----+----+----+
+    | CSC | BPC | CF    | 4  | 5  | 6  | 7  | 8  | 10 |
+    +-----+-----+-------+----+----+----+----+----+----+
+    | YUV | 8   | 4:2:2 | x  | x  | x  | x  | x  |    |
+    | RGB | 8   | 4:4:4 |    | x  | x  | x  | x  | x  |
+    | RGB | 10  | 4:4:4 |    | x  | x  | x  | x  | x  | 
+    +-----+-----+-------+----+----+----+----+----+----+
+
+v0.79 - March 11, 2017
+* QC_SSM_SUBSTREAM_ADVANCE enabled by default (important for decoder timing)
+* QC_ALLOW_ODD_SLICE_HEIGHT - odd slice height will be supported by vertically padding one row using
+pixel replication.
+* QC_EC_VEC_REMOVE_3_BIT_OPTION - restrict vector entropy coding from using 3 bits in 2sC representation, which 
+will be used for the fourth group in BP mode when using hybrid entropy coding (ecMethod=4 in config.txt)
+* macros for intra prediction have been removed, now using FlatnessTypeEnum instead
+
+v0.78 - March 10, 2017
+* MTK_BYPASSED_TRANSFORM - implementation of transform skip mode (or bypassed transform mode) 
+in ADSC. (0: disabled; 1: enabled with DPCM grouping + 3 compSkip; 2: enabled with BP grouping + 3 compSkip;)
+* MTK_BP_DISTORTION_CALC - modification of SAD calculation in BP mode for partition decision
+and mode decision. (0: Org. - Rec.; 1: Res. - IQ_Q_Res.)
+
+v0.77 - March 6, 2017
+* Added command line parameter for enabling debug maps from encoder (-debugMaps)
+* Massive code cleanup, removal of dead macros, use of enums for flatness/mode headers
+* Cleanup of EncTop::EncodeSlice() for easier reading
+* QC_SSM_SUBSTREAM_ADVANCE - enable one block advance of substream 0 transmission relative to
+other substreams.  Decoder receives mode information one blocktime early
+* Clean up warnings, memory leaks
+
+v0.76 - February 16, 2017
+* Numerous HW optimizations based on design feedback from Hardent
+  * QC_PPS_EN - enable PPS class
+  * QC_ENC_MODE_SELECTION_SIMPLIFY - reduce the logic complexity for encoder mode selection
+  * QC_SYNTAX_REDUCE_MODE_HEADER - use truncated binary for the mode header (5 modes total)
+  * QC_EC_METHOD_HYBRID - enable hybrid entropy coding (ecMethod=4)
+  * QC_SLICE_HEIGHT_PADDING_METHOD - partial height slices will be padded to full slice height
+  * QC_XFORM_DISABLE_PARTITION - disable the dynamic partition in transform mode and force 2x8
+  * QC_UNDERFLOW_PREVENTION_METHOD = 2 - updated method for enforcing underflow prevention
+  * QC_PRECISION_REDUCE_HAAR - reduce precision of Haar transform coefficients
+  * QC_PRECISION_REDUCE_TRANSFORM_QUANT - reduce precision for transform quantization
+  * QC_PRECISION_REDUCE_BP_QUANT - reduce precision for BP quantization
+  * QC_LIMIT_EC_GROUP_SIZE - encoder will limit the max EC group size
+  * QC_BP_SR_HW_MODS - modifications to the block prediction search range for HW optimization
+  * QC_INTRA_MODS - remove critical path issues for all intra predictors
+
+v0.75 - February 1, 2017
+* MTK_BP_SKIP_FORCE_BPV - disable BP search for BP-SKIP mode, instead load the BPVs directly from BP
+mode's search
+* MTK_BP_SKIP_REPLACE_BP_MODE - replace BP with BP-SKIP if all residuals are zero
+
+v0.74 - October 11, 2016
+* 4:2:0/4:2:2 working properly for DPX input for (bpp >= 4.0)
+* makefile fixed for Linux (tested on gcc version 4.8.4 (Ubuntu 4.8.4-2ubuntu1~14.04))
+
+v0.73 - August 26, 2016
+* Tuning for 5:1 compression use cases (10bpc->6bpp, 8bpc->4.75bpp)
+* MPP step size bug fix for bit depth > 8
+* ADJ_MAX_QP_FROM_BPP - enabled by default.  Will modify the maxQp based on the compressed rate
+* Add MPP_PRED_PREV_LINE - MPP predicts from previous reconstructed line when available
+* Add MPPF_ADAPTIVE - MPPF step size will change based on the compressed rate.  Also being done in both 
+  RGB and YCoCg color spaces (signaled with one bit).  This improves random noise use cases
+* dynamic flatness QP adjustment is applied both to (flat->complex) and (complex->flat) transitions
+* Changed DPX parameters to be same as default in DSCv1.2 code
+
+v0.72 - August 2, 2016
+* SSM can be configured either from the command line or the config file.  As with other parameters, the
+command line will take precedence over the config file.
+* Default mux word size has been increased from 112 bits to 144 bits.  This will apply to any combination
+of source bit depth and compressed bitrate.  Still the default encoder balance FIFO size is 10 kbits.
+* Bug fixes for SSM relating to rate-buffer underflow prevention
+* Add QC_QP_UPDATE_IGNORE_PADDING - rate control's update QP function will ignore zero-padding when
+computing the delta QP for current block.  This makes a difference for low compression ratios (e.g. 2:1, 3:1)
+which can fall into a trap when blocks are coded at high QP and are below the average block rate.
+* Add QC_DYNAMIC_FLATNESS_QP - the flatness QP will be adjusted as a function of the buffer fullness.  This
+improves quality when the rate buffer is relatively empty, especially for low compression ratios
+
+v0.71 - June 2, 2016
+* Add SSM - if enabled, substream multiplexing model will be initialized and used (four substreams)
+* Add QC_RC_TUNING_MARCH_2016_FIX - fix to unify max QP for FLS/NFLS
+* Add MPPF_BP_SKIP_DECISION_FIX - fix for bug during encoder mode decision for MPPF/BP-SKIP
+
+v0.7 - May 11, 2016
+* Add MTK_MPP_MP_ALTERNATION - if enabled, complexity reduction for MPP predictor calculation (YCoCg domain).
+* Add MTK_BP_SKIP - BP SKIP mode added (BP mode with BPV only and no residual)
+* Add MTK_MPP_SUBSTITUTION - BP SKIP mode can be substituted for MPP in certain cases
+* Add QC_YCOCG_WEIGHTS - RDO weights based on YCoCg-R
+* Add QC_RC_TUNING_MARCH_2016 - rate control improvements
+* Add QC_ADJUST_MAX_QP - adjust the max QP based on current algorithm state
+* Add QC_LAMBDA_MAX_INDEX_FIX - bug fix for computing 
+* Add BP_SIMPLIFIED - computational complexity reduction for BP mode
+* Add VISUAL_WEIGHTING - if enabled, codec is tuned to minimize S-CIELAB delta-E error metric rather than maximize PSNR
+* Add selection for entropy coding (EC) using config file or command line.  Four options for entropy coding:
+  * ecMethod = 0: default DSU-VLC
+  * ecMethod = 1: MTK sign/magnitude
+  * ecMethod = 2: QCOM vector EC
+  * ecMethod = 3: MTK sign/magnitude + QCOM vector EC
+
+v0.62 - February 17, 2016
+* Add "sign data removal" for improving the quality performance of entropy coding.
+* Add "BP-Skip" mode for improving the quality performance of MPP/MPPF mode.
+* Add cross color space RDO revised by Qualcomm (current default is turned off).
+
+v0.61 - January 06, 2016
+* Improve the efficiency of entropy coding with limited GR coding.
+
+v0.6 - December 18, 2015
+* Add new weighted sum calculation on the distortion used in cross color space RDO.
+* Add dual color space MPP mode.
+* Add PSNR calculator for 444 RGB input source.
+
+v0.51 - December 08, 2015
+* fixed an issue with v0.5 where the QP was being forced high for flat blocks.  This will affect performance at low QP.  All changes are tied to macro (MINOR_RC_TUNING)
+
+v0.5 - December 08, 2015
+* fixed-point changes
+** These changes can be enabled/disabled using the (USE_FIXEDPOINT) macro
+** Major algorithmic changes in any place which was previously using floating point arithmetic.  In particular, the following four changes have been made:
+*** Buffer fullness calculation has changed.  Buffer fullness is now stored as a 16-bit value 
+*** Target bitrate calculation has changed.  An additional term has been added to offset the target bitrate as a function of the buffer fullness
+*** Bitrate lambda is calculated using LUT and fixed-point arithmetic
+*** Buffer fullness lambda is caculated using LUT and fixed-point arithmetic
+* flatness changes
+** flatness types have been re-ordered.  The following is true as of v0.5
+*** Type 0: very flat region marked in ?úred??color
+*** Type 1: moderately flat region marked in ?úgreen??color 
+*** Type 2: complex to flat region marked in  ?úWhite??color
+*** Type 3: flat to complex region marked in ?úblue??color
+** flatness thresholds have been changed to work beter for edge cases (FLATNESS_CHANGE)
+** flatness changes introduced for first and last block of each line in slice (FLATNESS_FIRST_LAST_BLOCK)
+* Rate control changes for 4:2:0, 4:2:2
+* Block prediction with multiple search range has been introduced (BP_ALT_SR_MODE).  The implementation of this mode is not final and may be tuned further in the subsequent release.  In particular, this is currently implemented as an additional mode, as it was easier to code it this way.
+
+v0.4 - October 28, 2015
+* added native support for 4:2:2 and 4:2:0 DPX files.  The default bitrates for these are:
+** for 4:2:2 YUV, the bitrate is ~10% less than 6bpp --> 5.375bpp
+** for 4:2:0 YUV, the bitrate is ~20% less than 6bpp --> 4.75bpp
+** due to some edge cases, the codec will not accept any 4:2:0 YUV file which has a partial slice height of 1 (i.e. mod(height, slice_height) = 1).  For example, this will occur if an image of height 541 is used with a slice height of 108.
+* thanks to Greg Cook, updated PPM read/write functionality to use token instead of relying on newline for parsing headers.  
+* added macros for ENC_DUMP_MODE_USAGE/DEC_DUMP_MODE_USAGE.  Set these macros to zero to disable all occurrences of the global variables modeCounter[], numBlks.
+
+v0.3 - September 21, 2015
+* added API for Intopix wavelet integration.
+* increased # of intra prediction modes from 4 to 8.  SAD distortion is computed for each intra mode.  4 modes with lowest distortion are added to candidate set.  Best candidate is selected using RD cost.
+* added option for variable BP partition size (BP_VARIABLE_PARTITION).  Each block can be partitioned into either 2x2 or 1x2 partitions.  Decision is made based on RD cost.
+* cleaned up ENC_TRACE/DEC_TRACE macros per Greg Cook's request.
+
+v0.2 - July 23, 2015
+* added DPX file support (thanks to Fred Walls!)
+* deep color support (10bpc, 12bpc fully tested and working).  Will update 14/16bpc in next release.
+* added "-slicesPerLine" option to encoder.  Will partition the source width into slices of equal width.
+* bug fixes for case where (sourceWidth % blkWidth) > 0
+* reset m_hrdBufferCurrentSize to zero at the beginning of each slice so that the rate buffer always starts from the empty state.
+* changed deadzone for transform mode quantizer to 0.4*delta from 0.33*delta
+* changed deadzone for DPCM mode quantizer to 0.36*delta from 0.33*delta
+* bug fixes for MPP/MPPF reconstruction value
+* bug fix on SAD cost calculation while picking best offset in BP mode
+
+v0.11 - June 3, 2015
+* fixed bug for images where (sourceHeight % blkHeight) > 0
+
+v0.1 - June 1, 2015
+* initial release of Adv-DSC test model
